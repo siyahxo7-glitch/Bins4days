@@ -1,0 +1,242 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Bins4days — Shop</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: Arial, Helvetica, sans-serif;
+      background: #f7f7f5;
+      color: #111;
+    }
+    header {
+      position: sticky; top: 0; z-index: 10;
+      background: rgba(255,255,255,.95);
+      border-bottom: 1px solid #e8e8e8;
+      padding: 18px 6%;
+      display: flex; align-items: center; justify-content: space-between;
+    }
+    .logo { font-size: 25px; font-weight: 800; letter-spacing: -1px; }
+    nav { display: flex; gap: 25px; align-items: center; }
+    nav a { color: #111; text-decoration: none; font-size: 14px; }
+    .cart-btn {
+      border: 0; background: #111; color: white; border-radius: 999px;
+      padding: 11px 16px; cursor: pointer; font-weight: 700;
+    }
+    .hero {
+      padding: 90px 6% 70px;
+      background: white;
+      text-align: center;
+    }
+    .hero p {
+      color: #666; max-width: 560px; margin: 15px auto 25px;
+      line-height: 1.6;
+    }
+    .hero h1 { font-size: clamp(42px, 7vw, 76px); letter-spacing: -4px; }
+    .shop {
+      padding: 55px 6%;
+      max-width: 1250px; margin: auto;
+    }
+    .section-title { margin-bottom: 25px; font-size: 30px; letter-spacing: -1px; }
+    .products {
+      display: grid; grid-template-columns: repeat(3, 1fr); gap: 22px;
+    }
+    .card {
+      background: white; border: 1px solid #e8e8e8; border-radius: 18px;
+      overflow: hidden;
+    }
+    .product-img {
+      height: 250px; display: flex; align-items: center; justify-content: center;
+      background: #ecece8; font-size: 22px; font-weight: 800; color: #777;
+    }
+    .info { padding: 18px; }
+    .info h3 { margin-bottom: 7px; }
+    .info p { color: #777; font-size: 14px; line-height: 1.5; min-height: 42px; }
+    .row {
+      display: flex; align-items: center; justify-content: space-between;
+      margin-top: 17px;
+    }
+    .price { font-weight: 800; font-size: 18px; }
+    .add {
+      border: 0; background: #111; color: white; padding: 10px 14px;
+      border-radius: 10px; cursor: pointer; font-weight: 700;
+    }
+    footer {
+      padding: 35px 6%; text-align: center; color: #777;
+      border-top: 1px solid #e5e5e5; background: white;
+    }
+    .overlay {
+      display: none; position: fixed; inset: 0; z-index: 20;
+      background: rgba(0,0,0,.45);
+    }
+    .cart {
+      position: absolute; right: 0; top: 0; height: 100%; width: min(420px, 92vw);
+      background: white; padding: 25px; overflow-y: auto;
+    }
+    .cart-head { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
+    .close { border: 0; background: #eee; border-radius: 50%; width: 34px; height: 34px; cursor: pointer; }
+    .cart-item {
+      display: flex; justify-content: space-between; gap: 12px;
+      padding: 15px 0; border-bottom: 1px solid #eee;
+    }
+    .cart-item small { color: #777; }
+    .remove { border: 0; background: none; color: #777; cursor: pointer; }
+    .checkout {
+      width: 100%; margin-top: 20px; padding: 14px; border: 0;
+      background: #111; color: white; border-radius: 11px; font-weight: 800; cursor: pointer;
+    }
+    .empty { color: #777; padding: 25px 0; }
+    @media (max-width: 800px) {
+      .products { grid-template-columns: 1fr 1fr; }
+      nav a { display: none; }
+    }
+    @media (max-width: 520px) {
+      .products { grid-template-columns: 1fr; }
+      .hero { padding-top: 65px; }
+    }
+  </style>
+</head>
+<body>
+
+<header>
+  <div class="logo">Bins4days</div>
+  <nav>
+    <a href="#home">Home</a>
+    <a href="#shop">Shop</a>
+    <a href="#about">About</a>
+    <button class="cart-btn" onclick="openCart()">Cart (<span id="count">0</span>)</button>
+  </nav>
+</header>
+
+<section class="hero" id="home">
+  <h1>Bins4days.</h1>
+  <p>Simple products. Clean style. Everyday essentials made easy to shop.</p>
+  <button class="cart-btn" onclick="document.getElementById('shop').scrollIntoView({behavior:'smooth'})">Shop now</button>
+</section>
+
+<section class="shop" id="shop">
+  <h2 class="section-title">Featured products</h2>
+  <div class="products" id="products"></div>
+</section>
+
+<section class="shop" id="about">
+  <h2 class="section-title">About Bins4days</h2>
+  <p style="color:#666;line-height:1.7;max-width:700px;">
+    Welcome to Bins4days — your simple online shop. This starter site uses placeholder
+    products so you can replace them with your real products, photos, prices, and descriptions.
+  </p>
+</section>
+
+<footer>© 2026 Bins4days. All rights reserved.</footer>
+
+<div class="overlay" id="overlay" onclick="closeCart(event)">
+  <aside class="cart" onclick="event.stopPropagation()">
+    <div class="cart-head">
+      <h2>Your Cart</h2>
+      <button class="close" onclick="closeCart()">×</button>
+    </div>
+    <div id="cartItems"></div>
+    <div id="cartTotal"></div>
+    <button class="checkout" onclick="checkout()">Checkout</button>
+  </aside>
+</div>
+
+<script>
+const products = [
+  {id: 1, name: "Everyday Bin", price: 24.99, desc: "A clean, simple everyday essential."},
+  {id: 2, name: "Bins4days Classic", price: 34.99, desc: "Our classic product with the Bins4days look."},
+  {id: 3, name: "Premium Pick", price: 49.99, desc: "A premium placeholder product for your store."},
+  {id: 4, name: "Daily Essential", price: 19.99, desc: "Simple, useful, and ready for everyday use."},
+  {id: 5, name: "Limited Drop", price: 59.99, desc: "A limited-style product for special releases."},
+  {id: 6, name: "Starter Pack", price: 39.99, desc: "A convenient bundle for new customers."}
+];
+
+let cart = JSON.parse(localStorage.getItem("bins4daysCart") || "[]");
+
+function renderProducts() {
+  document.getElementById("products").innerHTML = products.map(p => `
+    <article class="card">
+      <div class="product-img">PRODUCT IMAGE</div>
+      <div class="info">
+        <h3>${p.name}</h3>
+        <p>${p.desc}</p>
+        <div class="row">
+          <span class="price">$${p.price.toFixed(2)}</span>
+          <button class="add" onclick="addToCart(${p.id})">Add to cart</button>
+        </div>
+      </div>
+    </article>
+  `).join("");
+}
+
+function addToCart(id) {
+  const item = cart.find(x => x.id === id);
+  if (item) item.qty++;
+  else cart.push({id, qty: 1});
+  save();
+  openCart();
+}
+
+function removeFromCart(id) {
+  cart = cart.filter(x => x.id !== id);
+  save();
+  renderCart();
+}
+
+function save() {
+  localStorage.setItem("bins4daysCart", JSON.stringify(cart));
+  updateCount();
+}
+
+function updateCount() {
+  document.getElementById("count").textContent = cart.reduce((sum, x) => sum + x.qty, 0);
+}
+
+function renderCart() {
+  const box = document.getElementById("cartItems");
+  if (!cart.length) {
+    box.innerHTML = '<div class="empty">Your cart is empty.</div>';
+    document.getElementById("cartTotal").innerHTML = "";
+    return;
+  }
+
+  let total = 0;
+  box.innerHTML = cart.map(item => {
+    const p = products.find(x => x.id === item.id);
+    total += p.price * item.qty;
+    return `
+      <div class="cart-item">
+        <div><strong>${p.name}</strong><br><small>Qty: ${item.qty}</small></div>
+        <div><strong>$${(p.price * item.qty).toFixed(2)}</strong><br>
+        <button class="remove" onclick="removeFromCart(${p.id})">Remove</button></div>
+      </div>`;
+  }).join("");
+
+  document.getElementById("cartTotal").innerHTML =
+    `<h3 style="margin-top:20px;">Total: $${total.toFixed(2)}</h3>`;
+}
+
+function openCart() {
+  document.getElementById("overlay").style.display = "block";
+  renderCart();
+}
+
+function closeCart() {
+  document.getElementById("overlay").style.display = "none";
+}
+
+function checkout() {
+  if (!cart.length) {
+    alert("Add a product to your cart first.");
+    return;
+  }
+  alert("Checkout is ready to connect to a payment provider. This demo does not process real payments yet.");
+}
+
+renderProducts();
+updateCount();
+</script>
+</body>
+</html>
